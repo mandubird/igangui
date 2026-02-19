@@ -1,0 +1,27 @@
+name: Weekly Crawler
+
+on:
+  schedule:
+    - cron: "0 0 * * 1"  # 매주 월요일 UTC 0시 (KST 오전 9시)
+  workflow_dispatch:  # 수동 실행 버튼 활성화
+
+jobs:
+  crawl:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 코드 체크아웃
+        uses: actions/checkout@v3
+
+      - name: Python 설정
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+
+      - name: 의존성 설치
+        run: pip install -r automation/requirements.txt
+
+      - name: 크롤러 실행
+        run: python automation/crawler.py
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}

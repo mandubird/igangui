@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>이 강의 어때? - 유튜버 강의 진짜 후기</title>
+    <style>
+        * { box-sizing: border-box; }
+        :root { --primary: #007bff; --neg: #ff4d4f; --pos: #52c41a; --neu: #8c8c8c; }
+        body { font-family: -apple-system, sans-serif; background: #f8f9fa; margin: 0; color: #333; line-height: 1.5; overflow-x: hidden; }
+        .container { max-width: 440px; margin: 0 auto; padding: 40px 20px; display: flex; flex-direction: column; width: 100%; }
+        .logo-link { text-decoration: none; color: inherit; cursor: pointer; }
+        .search-container { display: flex; gap: 8px; margin-bottom: 25px; width: 100%; }
+        .search-input { flex: 1; padding: 15px 20px; border-radius: 30px; border: 2px solid var(--primary); outline: none; font-size: 15px; width: 100%; }
+        .search-btn { background: var(--primary); color: white; border: none; padding: 0 22px; border-radius: 30px; cursor: pointer; font-weight: bold; flex-shrink: 0; }
+        .summary-text-box { display: none; background: white; border-radius: 20px; padding: 20px; margin-bottom: 20px; border: 1px solid #eee; font-size: 14px; line-height: 1.6; color: #444; }
+        .summary-text-box b { color: var(--primary); }
+        .creator-card, .course-card { background: white; border-radius: 24px; padding: 25px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); margin-bottom: 20px; width: 100%; overflow: hidden; }
+        .creator-card { display: none; }
+        .creator-header { font-size: 18px; font-weight: bold; margin-bottom: 15px; display: flex; align-items: center; gap: 8px; }
+        /* 링크 버튼 스타일 추가 */
+        .channel-link { font-size: 11px; color: var(--primary); text-decoration: none; border: 1px solid var(--primary); padding: 2px 8px; border-radius: 12px; margin-left: auto; font-weight: normal; }
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .stat-item { background: #f8f9fa; padding: 15px 10px; border-radius: 16px; font-size: 12px; text-align: center; border: 1px solid #eee; color: #666; word-break: break-all; }
+        .stat-item b { display: block; font-size: 18px; margin-top: 4px; color: #333; }
+        .stat-sub { font-size: 10px; color: #999; margin-top: 4px; display: block; }
+        .course-list-header { text-align: center; font-size: 14px; color: #666; margin: 35px 0 15px; display: none; font-weight: 500; }
+        .course-card { border: 1px solid #eee; box-shadow: 0 4px 12px rgba(0,0,0,0.03); }
+        .course-title { font-size: 18px; font-weight: bold; margin-bottom: 15px; display: block; }
+        .course-satisfaction { font-size: 18px; color: #f39c12; font-weight: bold; margin-bottom: 4px; }
+        .help-box { background: #eef2f7; padding: 15px; border-radius: 14px; text-align: center; font-size: 14px; font-weight: bold; color: #333; margin: 15px 0; width: 100%; }
+        .weighted-tag-box { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin: 15px 0; }
+        .w-tag { font-size: 10px; font-weight: bold; padding: 6px 2px; border-radius: 8px; border: 1px solid; text-align: center; white-space: nowrap; display: flex; justify-content: center; align-items: center; }
+        .w-tag.pos { background: #f6ffed; border-color: #b7eb8f; color: #52c41a; }
+        .w-tag.neg { background: #fff1f0; border-color: #ffa39e; color: #ff4d4f; }
+        .w-tag.neu { background: #f5f5f5; border-color: #d9d9d9; color: #333; }
+        .review-toggle-btn { width: 100%; text-align: center; background: #f1f3f5; border: none; font-size: 14px; font-weight: bold; color: #495057; cursor: pointer; padding: 12px 0; border-radius: 12px; margin-top: 15px; display: flex; justify-content: center; align-items: center; gap: 6px; }
+        .review-content-area { display: none; padding-top: 20px; border-top: 1px dashed #eee; margin-top: 15px; width: 100%; overflow: hidden; }
+        .review-item { font-size: 14px; color: #444; margin-bottom: 18px; line-height: 1.6; word-break: break-all; }
+        .review-tags { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 8px; width: 100%; }
+        .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 2000; justify-content: center; align-items: flex-start; padding: 40px 20px; overflow-y: auto; }
+        .modal-content { background: white; width: 100%; max-width: 380px; border-radius: 28px; padding: 25px; box-sizing: border-box; }
+        .tag-container { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 15px; }
+        .tag-item { padding: 6px 10px; border-radius: 6px; border: 1px solid #eee; font-size: 11px; cursor: pointer; background: #fff; }
+        .tag-item.selected { background: var(--primary); color: white; border-color: var(--primary); }
+        .write-btn { width: 100%; background: #1a1a1a; color: white; border: none; padding: 16px; border-radius: 14px; cursor: pointer; font-weight: bold; }
+        .confirm-box { display: flex; align-items: flex-start; gap: 8px; margin-top: 15px; font-size: 11px; color: #666; cursor: pointer; line-height: 1.4; }
+        .popup-guide-text { font-size: 13px; font-weight: bold; text-align: center; color: #555; margin: 0; }
+        .footer { margin-top: auto; padding: 60px 0 40px; text-align: center; color: #999; font-size: 11px; line-height: 1.8; border-top: 1px solid #eee; width: 100%; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div style="text-align:center; padding-bottom: 30px;">
+        <a href="/" class="logo-link">
+            <h2 style="margin:0; font-size:24px;">🤔 이 강의 어때?</h2>
+        </a>
+        <p style="color:#666; font-size:14px; margin-top:8px;">광고 말고, 진짜 수강생 후기만 모았습니다.</p>
+    </div>
+    <div class="search-container">
+        <input type="text" id="search-input" class="search-input" placeholder="유튜버명을 입력하세요" onkeyup="if(window.event.keyCode==13){handleSearch()}">
+        <button onclick="handleSearch()" class="search-btn">검색</button>
+    </div>
+    <div id="dynamic-summary" class="summary-text-box"></div>
+    <div id="creator-summary" class="creator-card"></div>
+    <div id="course-list-title" class="course-list-header">“아래는 위 크리에이터가 운영하는 강의 목록입니다”</div>
+    <div id="course-list"></div>
+    <div class="footer">
+        본 서비스는 개인의 경험을 공유하는 정보 플랫폼입니다.<br>
+        콘텐츠의 사실 여부 및 해석에 대한 책임은 작성자에게 있으며,<br>
+        허위·비방·권리 침해 목적의 게시물은 삭제될 수 있습니다.<br><br>
+        문의: <a href="mailto:remoney8080@gmail.com" style="color:#999; text-decoration: underline;">remoney8080@gmail.com</a>
+    </div>
+</div>
+
+<div id="review-modal" class="modal">
+    <div class="modal-content">
+        <div id="step1">
+            <h3 style="text-align:center; margin-bottom:15px; font-size:18px;">강의 후기 남기기</h3>
+            <div id="star-rating" style="font-size:35px; text-align:center; cursor:pointer; margin-bottom:2px; color:#f39c12;">
+                <span onclick="setRate(1)">★</span><span onclick="setRate(2)">★</span><span onclick="setRate(3)">★</span><span onclick="setRate(4)">★</span><span onclick="setRate(5)" style="color:#ddd;">☆</span>
+            </div>
+            <p class="popup-guide-text" style="margin-bottom: 12px;">⭐ 별점 선택 후</p>
+            <p class="popup-guide-text" style="margin-bottom: 8px;">👍 추천 여부를 선택해주세요</p>
+            <div style="display:flex; gap:10px; margin-bottom:20px;">
+                <button id="btn-y" style="flex:1; padding:12px; border-radius:12px; border:1px solid #eee; background:#fff; font-weight:bold; font-size:14px;" onclick="setHelpful(true)">👍 예</button>
+                <button id="btn-n" style="flex:1; padding:12px; border-radius:12px; border:1px solid #eee; background:#fff; font-weight:bold; font-size:14px;" onclick="setHelpful(false)">👎 아니오</button>
+            </div>
+            <p style="font-size:13px; font-weight:bold; margin-bottom:8px; color:#333;">이 강의에 대한 개인적인 한마디</p>
+            <textarea id="review-text" maxlength="200" style="width:100%; height:110px; padding:15px; border-radius:12px; border:1px solid #ddd; box-sizing:border-box; font-size:14px; outline:none;" placeholder="개인적인 한마디를 남겨주세요"></textarea>
+            <label class="confirm-box"><input type="checkbox" id="confirm-check"><span style="font-size:11px; color:#666;">본 후기는 개인 경험이며, 허위 사실이나 비방 목적이 아님을 확인함.</span></label>
+            <button class="write-btn" style="background:var(--primary); margin-top:15px;" onclick="goStep2()">다음: 태그 선택 (최소 3개) ➡️</button>
+        </div>
+        <div id="step2" style="display:none;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                <h3 style="margin:0;">상세 태그 선택</h3>
+                <span id="count-display" style="font-size:12px; font-weight:bold; color:var(--primary);">0 / 8</span>
+            </div>
+            <div id="tag-lists"></div>
+            <button class="write-btn" style="margin-top:20px;" onclick="submitFinal()">최종 후기 등록 완료 🚀</button>
+            <div style="text-align:center; margin-top:20px;"><span style="font-size:13px; color:#999; cursor:pointer; text-decoration:underline;" onclick="goStep1()">⬅️ 이전 단계로 돌아가기</span></div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const SUPABASE_URL = 'https://tctogguvgwvkxpymdsmn.supabase.co';
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRjdG9nZ3V2Z3d2a3hweW1kc21uIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgwNzA0MzQsImV4cCI6MjA4MzY0NjQzNH0.sd54qY83b09GmsIKVWCB7IkjLrC1vePrhbhPHKnQazE';
+    const headers = { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Content-Type': 'application/json' };
+    
+    let reviewData = { cid: '', rate: 4, help: null, tags: [] };
+    const forbiddenWords = ["사기", "불법", "고의", "범죄", "신고", "먹튀", "18", "개새끼", "사기꾼", "100%보장", "무조건", "절대"];
+
+    const posTags = ['실전적용가능', '강사응답빠름', '재수강의사', '초보추천', '완전추천', '이해잘됨', '설명명확', '예제풍부', '바로써먹음', '커리큘럼탄탄', '피드백좋음', '최신트렌드반영', '비전공자도이해', '가성비좋음', '실무자추천'];
+    const negTags = ['강의료비쌈', '내용빈약', '환불관련아쉬움', '시간낭비', '설명불친절', '강의구성불만족', '광고기대와차이', '홍보와체감차이', '질문답변없음', '기존자료활용', '실습부족', '영상아쉬움', '음질아쉬움', '초보에겐어려움', '자료단순함'];
+    const neuTags = ['기초위주', '유튜브와중복', '고급과정', '짧은길이', '자료풍부', '이론위주', '실습위주', '프로젝트기반', '짧고굵음', '긴강의', '난이도높음', '입문자용', '중급자용', '실무자용', '최신업데이트없음', '자료다운로드제공', '커뮤니티있음'];
+
+    async function handleSearch() {
+        const val = document.getElementById('search-input').value.trim();
+        if(!val) return;
+        const res = await fetch(`${SUPABASE_URL}/rest/v1/creator_stats?creator_name=ilike.*${val}*&select=*`, { headers });
+        const stats = await res.json();
+        const summary = document.getElementById('creator-summary');
+        const listHeader = document.getElementById('course-list-title');
+        const courseList = document.getElementById('course-list');
+        const dynamicSummary = document.getElementById('dynamic-summary');
+        
+        if(stats.length > 0) {
+            const s = stats[0]; 
+            summary.style.display = 'block'; 
+            listHeader.style.display = 'block';
+            /* 수정된 부분: 채널 링크가 있을 때만 🔗 버튼 노출 */
+            summary.innerHTML = `
+                <div class="creator-header">
+                    👤 유튜버: ${s.creator_name}
+                    ${s.link_url ? `<a href="${s.link_url}" target="_blank" class="channel-link">🔗 채널보기</a>` : ''}
+                </div>
+                <div class="stats-grid">
+                    <div class="stat-item">구독자<b>${s.subscribers}</b><span class="stat-sub">(${s.updated_at || '26년 1월'} 기준)</span></div>
+                    <div class="stat-item">등록 강의 수<b>1개</b></div>
+                    <div class="stat-item">총 후기<b>${s.total_reviews}개</b><span class="stat-sub" style="color:#999; font-weight:bold;">후기 10개 미만은 참고용</span></div>
+                    <div class="stat-item">평균 만족도<b>${Number(s.avg_rating || 0).toFixed(1)} / 5</b><span class="stat-sub">(개인 경험 기반)</span></div>
+                </div>`;
+            fetchCourses(s.creator_id, s.creator_name, s.total_reviews);
+        } else {
+            summary.style.display = 'none'; 
+            listHeader.style.display = 'none'; 
+            dynamicSummary.style.display = 'none';
+            courseList.innerHTML = `<div style="text-align:center; padding:60px 20px; color:#666; line-height:1.6;"><b>등록된 정보가 없습니다.</b><br>크리에이터와 강의 정보를 메일로 업데이트 요청해주세요.<br><br><a href="mailto:remoney8080@gmail.com" style="color:var(--primary); font-weight:bold;">remoney8080@gmail.com</a></div>`;
+        }
+    }
+
+    async function fetchCourses(creatorId, creatorName, totalReviews) {
+        const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/get_course_stats`, { method: 'POST', headers, body: JSON.stringify({ target_creator_id: creatorId })});
+        const courses = await res.json();
+        const list = document.getElementById('course-list');
+        const dynamicSummary = document.getElementById('dynamic-summary');
+        list.innerHTML = '';
+        let allTags = {};
+
+        for (const c of courses) {
+            const revRes = await fetch(`${SUPABASE_URL}/rest/v1/reviews?course_id=eq.${c.id}&select=content,rating,tags&order=created_at.desc`, { headers });
+            const reviews = await revRes.json();
+            let tagCalc = {};
+            reviews.forEach(r => {
+                if(r.tags) r.tags.forEach(t => {
+                    if(!tagCalc[t]) tagCalc[t] = { score: 0, count: 0, type: 'neu' };
+                    let w = 0.7;
+                    if(posTags.includes(t)) { w = 1.0; tagCalc[t].type = 'pos'; }
+                    else if(negTags.includes(t)) { w = 1.3; tagCalc[t].type = 'neg'; }
+                    tagCalc[t].score += w;
+                    tagCalc[t].count += 1;
+                    allTags[t] = (allTags[t] || 0) + 1;
+                });
+            });
+
+            const topTags = Object.entries(allTags).sort((a,b) => b[1] - a[1]).slice(0, 3).map(t => t[0]);
+            if (totalReviews > 0 && topTags.length > 0) {
+                dynamicSummary.style.display = 'block';
+                dynamicSummary.innerHTML = `검색하신 <b>${creatorName}</b> 님의 강의는 현재까지 총 <b>${totalReviews}개</b>의 실제 수강생 후기가 등록되어 있습니다. 수강생들은 주로 <b>#${topTags.join(', #')}</b> 등의 키워드를 가장 많이 언급하고 있습니다. 광고 없는 진짜 후기를 아래에서 확인해보세요.`;
+            } else {
+                dynamicSummary.style.display = 'none';
+            }
+
+            const top4 = Object.entries(tagCalc).sort((a,b) => b[1].score - a[1].score).slice(0, 4);
+            const tagHtml = top4.map(([name, info]) => `<span class="w-tag ${info.type}">${name} ${info.count}</span>`).join('');
+            let reviewsHtml = reviews.map(r => {
+                const tagsInside = (r.tags || []).map(t => {
+                    let tType = 'neu';
+                    if(posTags.includes(t)) tType = 'pos';
+                    else if(negTags.includes(t)) tType = 'neg';
+                    return `<span class="w-tag ${tType}" style="display:inline-block; margin:2px; padding:2px 8px; font-size:10px;">#${t}</span>`;
+                }).join('');
+                return `<div class="review-item" style="border-bottom:1px solid #eee; padding-bottom:12px; margin-bottom:12px;"><b>🗨️ “${r.content}”</b><div class="review-tags">${tagsInside}</div></div>`;
+            }).join('');
+            
+            list.insertAdjacentHTML('beforeend', `
+                <div class="course-card">
+                    <strong class="course-title">${c.title}</strong>
+                    <div class="course-satisfaction">평균 만족도: ⭐ ${Number(c.avg_rating || 0).toFixed(1)} / ${c.review_count}명</div>
+                    <div class="help-box">도움됨 👍 (${c.recommend_rate || 0}%) &nbsp;&nbsp; 도움안됨 👎 (${100-(c.recommend_rate||0)}%)</div>
+                    <div class="weighted-tag-box">${tagHtml}</div>
+                    <button class="write-btn" style="background:#1a1a1a;" onclick="openModal('${c.id}')">🤝 이 강의 후기 남기기</button>
+                    <button class="review-toggle-btn" onclick="toggleReviews('${c.id}')">📂 수강생 후기 보기 (${c.review_count})</button>
+                    <div id="reviews-${c.id}" class="review-content-area">${reviewsHtml || '첫 후기를 남겨주세요.'}</div>
+                </div>`);
+        }
+    }
+
+    function toggleReviews(id) {
+        const area = document.getElementById(`reviews-${id}`);
+        area.style.display = area.style.display === 'block' ? 'none' : 'block';
+    }
+
+    function openModal(id) { reviewData.cid = id; reviewData.help = null; document.getElementById('review-modal').style.display = 'flex'; setRate(4); }
+    function goStep1() { document.getElementById('step2').style.display = 'none'; document.getElementById('step1').style.display = 'block'; }
+    function setRate(r) { reviewData.rate = r; document.querySelectorAll('#star-rating span').forEach((s, i) => s.style.color = i < r ? '#f39c12' : '#ddd'); }
+    function setHelpful(v) { reviewData.help = v; document.getElementById('btn-y').style.borderColor = v ? 'var(--primary)' : '#eee'; document.getElementById('btn-n').style.borderColor = !v ? 'var(--neg)' : '#eee'; }
+    
+    function goStep2() {
+        const text = document.getElementById('review-text').value;
+        const foundWords = forbiddenWords.filter(w => text.includes(w));
+        if(foundWords.length > 0) {
+            return alert("사기, 불법, 고의, 범죄, 신고, 먹튀 등의 부적절한 단어가 포함되어 있습니다. 개인경험 중심으로 수정해주세요. (실제 피해를 당한 경우는 공정위나 소보원에 문의하세요.)");
+        }
+        if(!text || reviewData.help === null || !document.getElementById('confirm-check').checked) return alert("필수 항목을 모두 입력해주세요.");
+        document.getElementById('step1').style.display = 'none'; document.getElementById('step2').style.display = 'block'; renderTags();
+    }
+
+    function renderTags() {
+        const tagDict = { pos: posTags, neg: negTags, neu: neuTags };
+        const draw = (l, list, c) => `<div style="color:${c}; font-size:11px; font-weight:bold; margin:10px 0 5px;">${l}</div><div class="tag-container">${list.map(t => `<div class="tag-item" onclick="toggleTag(this, '${t}')">#${t}</div>`).join('')}</div>`;
+        document.getElementById('tag-lists').innerHTML = draw('🟢 긍정 태그', tagDict.pos, 'var(--pos)') + draw('🔴 부정 태그', tagDict.neg, 'var(--neg)') + draw('⚪ 중립/기타', tagDict.neu, 'var(--neu)');
+    }
+
+    function toggleTag(el, t) {
+        if(reviewData.tags.includes(t)) { reviewData.tags = reviewData.tags.filter(i => i !== t); el.classList.remove('selected'); }
+        else { 
+            if(reviewData.tags.length >= 8) { alert("최대 8개까지만 선택할 수 있습니다."); return; }
+            reviewData.tags.push(t); el.classList.add('selected'); 
+        }
+        document.getElementById('count-display').innerText = `${reviewData.tags.length} / 8`;
+    }
+
+    async function submitFinal() {
+        if(reviewData.tags.length < 3) return alert("태그를 최소 3개 이상 선택해주세요.");
+        const res = await fetch(`${SUPABASE_URL}/rest/v1/reviews`, { method: 'POST', headers, body: JSON.stringify({ course_id: reviewData.cid, rating: reviewData.rate, is_helpful: reviewData.help, content: document.getElementById('review-text').value, tags: reviewData.tags }) });
+        if(res.ok) { alert("등록 완료!"); location.reload(); }
+    }
+</script>
+</body>
+</html>

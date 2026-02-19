@@ -1,0 +1,20 @@
+# ============================================
+# ⚠️ 환경변수 — 절대 커밋 금지 (Supabase key 등)
+# ============================================
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.Python
+venv/
+.venv/
+env/
+
+# 기타
+node_modules/
+.DS_Store
+*.log
