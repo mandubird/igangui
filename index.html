@@ -47,9 +47,13 @@
         .confirm-box { display: flex; align-items: flex-start; gap: 8px; margin-top: 15px; font-size: 11px; color: #666; cursor: pointer; line-height: 1.4; }
         .popup-guide-text { font-size: 13px; font-weight: bold; text-align: center; color: #555; margin: 0; }
         .footer { margin-top: auto; padding: 60px 0 40px; text-align: center; color: #999; font-size: 11px; line-height: 1.8; border-top: 1px solid #eee; width: 100%; }
-        /* ── 제작자 공식 답변 박스 ── */
+        /* ── 크리에이터 공식 답변 박스 (접기/펼치기) ── */
         .reply-section { margin-top: 20px; border-top: 1px dashed #e0e0e0; padding-top: 16px; }
-        .reply-section-title { font-size: 12px; font-weight: bold; color: #888; letter-spacing: 0.5px; margin-bottom: 12px; }
+        .reply-section-toggle { width: 100%; text-align: left; background: #f1f3f5; border: none; font-size: 13px; font-weight: bold; color: #495057; cursor: pointer; padding: 12px 14px; border-radius: 12px; display: flex; align-items: center; gap: 6px; }
+        .reply-section-toggle:hover { background: #e9ecef; }
+        .reply-section-toggle .arrow { font-size: 10px; color: #888; transition: transform 0.2s; }
+        .reply-section-toggle.open .arrow { transform: rotate(90deg); }
+        .reply-section-content { display: none; padding-top: 14px; }
         .reply-box { background: #f8faff; border: 1.5px solid #c7d7fd; border-radius: 14px; padding: 16px; }
         .reply-badge { font-size: 11px; font-weight: bold; color: #007bff; background: #dbeafe; padding: 3px 10px; border-radius: 20px; display: inline-block; margin-bottom: 10px; }
         .reply-text { font-size: 14px; color: #333; line-height: 1.75; white-space: pre-wrap; word-break: break-all; margin-bottom: 10px; }
@@ -205,9 +209,9 @@
             }
 
             const replyHtml = creatorReply
-              ? `<div class="reply-box"><span class="reply-badge">🎙 제작자 공식 답변 · 본인 인증 완료</span><div class="reply-text">${(creatorReply.content || '').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div><div class="reply-date">${new Date(creatorReply.created_at).toLocaleDateString('ko-KR')} 등록</div><div class="reply-legal">본 답변은 제작자가 직접 등록한 공식 입장입니다.<br>운영자는 내용의 사실 여부를 보증하지 않습니다.</div></div>`
-              : `<div class="reply-empty">현재 등록된 공식 답변이 없습니다.<br><button class="apply-btn" onclick="toggleApplyForm('${c.id}')">제작자이신가요? 답변 등록 신청</button><div class="apply-form" id="apply-form-${c.id}"><input class="apply-input" id="apply-email-${c.id}" type="email" placeholder="비즈니스 이메일을 입력해주세요" /><button class="apply-submit" onclick="submitApplication('${c.id}')">신청하기</button><div class="apply-notice">운영팀이 확인 후 입력하신 메일로 답변 링크를 발송드립니다.<br>통상 1~2 영업일 내 처리됩니다.</div></div></div>`;
-            const replySectionHtml = `<div class="reply-section"><div class="reply-section-title">🎙 제작자 공식 답변</div>${replyHtml}</div>`;
+              ? `<div class="reply-box"><span class="reply-badge">🎙 크리에이터 공식 답변 · 본인 인증 완료</span><div class="reply-text">${(creatorReply.content || '').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div><div class="reply-date">${new Date(creatorReply.created_at).toLocaleDateString('ko-KR')} 등록</div><div class="reply-legal">본 답변은 크리에이터가 직접 등록한 공식 입장입니다.<br>운영자는 내용의 사실 여부를 보증하지 않습니다.</div></div>`
+              : `<div class="reply-empty">현재 등록된 공식 답변이 없습니다.<br><button class="apply-btn" onclick="toggleApplyForm('${c.id}')">크리에이터이신가요? 답변 등록 신청</button><div class="apply-form" id="apply-form-${c.id}"><input class="apply-input" id="apply-email-${c.id}" type="email" placeholder="비즈니스 이메일을 입력해주세요" /><button class="apply-submit" onclick="submitApplication('${c.id}')">신청하기</button><div class="apply-notice">운영팀이 확인 후 입력하신 메일로 답변 링크를 발송드립니다.<br>통상 1~2 영업일 내 처리됩니다.</div></div></div>`;
+            const replySectionHtml = `<div class="reply-section"><button type="button" class="reply-section-toggle" id="reply-toggle-${c.id}" onclick="toggleReplySection('${c.id}')" aria-expanded="false"><span class="arrow">▶</span> 🎙 크리에이터 공식 답변</button><div class="reply-section-content" id="reply-content-${c.id}">${replyHtml}</div></div>`;
             const top4 = Object.entries(tagCalc).sort((a,b) => b[1].score - a[1].score).slice(0, 4);
             const tagHtml = top4.map(([name, info]) => `<span class="w-tag ${info.type}">${name} ${info.count}</span>`).join('');
             let reviewsHtml = reviews.map(r => {
@@ -237,6 +241,14 @@
     function toggleReviews(id) {
         const area = document.getElementById(`reviews-${id}`);
         area.style.display = area.style.display === 'block' ? 'none' : 'block';
+    }
+    function toggleReplySection(id) {
+        const content = document.getElementById(`reply-content-${id}`);
+        const btn = document.getElementById(`reply-toggle-${id}`);
+        const isOpen = content.style.display === 'block';
+        content.style.display = isOpen ? 'none' : 'block';
+        if (btn) btn.classList.toggle('open', !isOpen);
+        if (btn) btn.setAttribute('aria-expanded', !isOpen);
     }
 
     function openModal(id) { reviewData.cid = id; reviewData.help = null; document.getElementById('review-modal').style.display = 'flex'; setRate(4); }
