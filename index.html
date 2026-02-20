@@ -47,6 +47,21 @@
         .confirm-box { display: flex; align-items: flex-start; gap: 8px; margin-top: 15px; font-size: 11px; color: #666; cursor: pointer; line-height: 1.4; }
         .popup-guide-text { font-size: 13px; font-weight: bold; text-align: center; color: #555; margin: 0; }
         .footer { margin-top: auto; padding: 60px 0 40px; text-align: center; color: #999; font-size: 11px; line-height: 1.8; border-top: 1px solid #eee; width: 100%; }
+        /* ── 제작자 공식 답변 박스 ── */
+        .reply-section { margin-top: 20px; border-top: 1px dashed #e0e0e0; padding-top: 16px; }
+        .reply-section-title { font-size: 12px; font-weight: bold; color: #888; letter-spacing: 0.5px; margin-bottom: 12px; }
+        .reply-box { background: #f8faff; border: 1.5px solid #c7d7fd; border-radius: 14px; padding: 16px; }
+        .reply-badge { font-size: 11px; font-weight: bold; color: #007bff; background: #dbeafe; padding: 3px 10px; border-radius: 20px; display: inline-block; margin-bottom: 10px; }
+        .reply-text { font-size: 14px; color: #333; line-height: 1.75; white-space: pre-wrap; word-break: break-all; margin-bottom: 10px; }
+        .reply-legal { font-size: 11px; color: #bbb; line-height: 1.6; border-top: 1px solid #e8eef8; padding-top: 10px; margin-top: 4px; }
+        .reply-date { font-size: 11px; color: #aaa; margin-top: 6px; }
+        .reply-empty { text-align: center; padding: 16px 0 4px; color: #aaa; font-size: 13px; line-height: 1.7; }
+        .apply-btn { display: inline-block; margin-top: 10px; font-size: 12px; color: #007bff; background: none; border: 1px solid #007bff; border-radius: 20px; padding: 5px 14px; cursor: pointer; text-decoration: none; }
+        .apply-form { display: none; margin-top: 14px; text-align: left; }
+        .apply-input { width: 100%; padding: 11px 14px; border: 1.5px solid #ddd; border-radius: 10px; font-size: 13px; outline: none; margin-bottom: 8px; }
+        .apply-input:focus { border-color: #007bff; }
+        .apply-submit { width: 100%; background: #1a1a1a; color: white; border: none; padding: 12px; border-radius: 10px; font-size: 13px; font-weight: bold; cursor: pointer; }
+        .apply-notice { font-size: 11px; color: #aaa; margin-top: 8px; line-height: 1.6; }
     </style>
 </head>
 <body>
@@ -161,6 +176,13 @@
         for (const c of courses) {
             const revRes = await fetch(`${SUPABASE_URL}/rest/v1/reviews?course_id=eq.${c.id}&select=content,rating,tags&order=created_at.desc`, { headers });
             const reviews = await revRes.json();
+            let creatorReply = null;
+            try {
+                const replyRes = await fetch(`${SUPABASE_URL}/rest/v1/rpc/get_creator_response`, { method: 'POST', headers, body: JSON.stringify({ target_course_id: c.id }) });
+                const replyRows = await replyRes.json();
+                const row = Array.isArray(replyRows) ? replyRows[0] : replyRows;
+                if (row && row.content) creatorReply = row;
+            } catch (_) { /* RPC 실패 시 신청 버튼만 표시 */ }
             let tagCalc = {};
             reviews.forEach(r => {
                 if(r.tags) r.tags.forEach(t => {
@@ -182,6 +204,10 @@
                 dynamicSummary.style.display = 'none';
             }
 
+            const replyHtml = creatorReply
+              ? `<div class="reply-box"><span class="reply-badge">🎙 제작자 공식 답변 · 본인 인증 완료</span><div class="reply-text">${(creatorReply.content || '').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</div><div class="reply-date">${new Date(creatorReply.created_at).toLocaleDateString('ko-KR')} 등록</div><div class="reply-legal">본 답변은 제작자가 직접 등록한 공식 입장입니다.<br>운영자는 내용의 사실 여부를 보증하지 않습니다.</div></div>`
+              : `<div class="reply-empty">현재 등록된 공식 답변이 없습니다.<br><button class="apply-btn" onclick="toggleApplyForm('${c.id}')">제작자이신가요? 답변 등록 신청</button><div class="apply-form" id="apply-form-${c.id}"><input class="apply-input" id="apply-email-${c.id}" type="email" placeholder="비즈니스 이메일을 입력해주세요" /><button class="apply-submit" onclick="submitApplication('${c.id}')">신청하기</button><div class="apply-notice">운영팀이 확인 후 입력하신 메일로 답변 링크를 발송드립니다.<br>통상 1~2 영업일 내 처리됩니다.</div></div></div>`;
+            const replySectionHtml = `<div class="reply-section"><div class="reply-section-title">🎙 제작자 공식 답변</div>${replyHtml}</div>`;
             const top4 = Object.entries(tagCalc).sort((a,b) => b[1].score - a[1].score).slice(0, 4);
             const tagHtml = top4.map(([name, info]) => `<span class="w-tag ${info.type}">${name} ${info.count}</span>`).join('');
             let reviewsHtml = reviews.map(r => {
@@ -201,6 +227,7 @@
                     <div class="help-box">도움됨 👍 (${c.recommend_rate || 0}%) &nbsp;&nbsp; 도움안됨 👎 (${100-(c.recommend_rate||0)}%)</div>
                     <div class="weighted-tag-box">${tagHtml}</div>
                     <button class="write-btn" style="background:#1a1a1a;" onclick="openModal('${c.id}')">🤝 이 강의 후기 남기기</button>
+                    ${replySectionHtml}
                     <button class="review-toggle-btn" onclick="toggleReviews('${c.id}')">📂 수강생 후기 보기 (${c.review_count})</button>
                     <div id="reviews-${c.id}" class="review-content-area">${reviewsHtml || '첫 후기를 남겨주세요.'}</div>
                 </div>`);
@@ -246,6 +273,21 @@
         if(reviewData.tags.length < 3) return alert("태그를 최소 3개 이상 선택해주세요.");
         const res = await fetch(`${SUPABASE_URL}/rest/v1/reviews`, { method: 'POST', headers, body: JSON.stringify({ course_id: reviewData.cid, rating: reviewData.rate, is_helpful: reviewData.help, content: document.getElementById('review-text').value, tags: reviewData.tags }) });
         if(res.ok) { alert("등록 완료!"); location.reload(); }
+    }
+
+    function toggleApplyForm(courseId) {
+        const form = document.getElementById(`apply-form-${courseId}`);
+        form.style.display = form.style.display === 'block' ? 'none' : 'block';
+    }
+    async function submitApplication(courseId) {
+        const email = document.getElementById(`apply-email-${courseId}`).value.trim();
+        if (!email || !email.includes('@')) { alert('올바른 이메일 주소를 입력해주세요.'); return; }
+        const res = await fetch(`${SUPABASE_URL}/rest/v1/creator_applications`, { method: 'POST', headers, body: JSON.stringify({ course_id: courseId, email }) });
+        if (res.status === 201) {
+            document.getElementById(`apply-form-${courseId}`).innerHTML = `<div style="text-align:center; color:#52c41a; font-size:13px; padding:8px 0;">✅ 신청이 접수되었습니다.<br><span style="color:#aaa; font-size:11px;">운영팀 확인 후 메일로 안내드립니다.</span></div>`;
+        } else {
+            alert('오류가 발생했습니다. 잠시 후 다시 시도해주세요.');
+        }
     }
 </script>
 </body>

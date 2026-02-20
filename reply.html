@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>제작자 공식 답변 등록 | 이 강의 어때?</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: -apple-system, sans-serif; background: #f8f9fa; margin: 0; display: flex; justify-content: center; padding: 40px 20px; min-height: 100vh; }
+    .card { background: white; border-radius: 24px; padding: 30px; max-width: 440px; width: 100%; box-shadow: 0 10px 30px rgba(0,0,0,0.08); height: fit-content; }
+    .logo { font-size: 14px; color: #aaa; margin-bottom: 24px; }
+    h2 { font-size: 20px; margin: 0 0 6px; color: #1a1a1a; }
+    .sub { font-size: 13px; color: #888; margin-bottom: 24px; line-height: 1.6; }
+    .course-box { background: #f0f4ff; border-radius: 12px; padding: 14px 16px; font-size: 14px; font-weight: bold; color: #333; margin-bottom: 20px; }
+    .course-label { font-size: 11px; color: #888; font-weight: normal; margin-bottom: 4px; }
+    .guide { border: 1px solid #e8e8e8; border-radius: 12px; padding: 14px 16px; font-size: 13px; color: #555; margin-bottom: 20px; line-height: 1.8; }
+    .guide-title { font-weight: bold; color: #333; margin-bottom: 8px; font-size: 13px; }
+    textarea { width: 100%; height: 180px; border: 2px solid #e0e0e0; border-radius: 14px; padding: 14px; font-size: 14px; line-height: 1.7; resize: none; outline: none; transition: border-color 0.2s; font-family: -apple-system, sans-serif; }
+    textarea:focus { border-color: #007bff; }
+    .char-count { text-align: right; font-size: 12px; color: #bbb; margin: 6px 0 20px; }
+    .legal-box { background: #fafafa; border: 1px solid #e8e8e8; border-radius: 10px; padding: 12px 14px; font-size: 11px; color: #999; line-height: 1.7; margin-bottom: 20px; }
+    .submit-btn { width: 100%; background: #007bff; color: white; border: none; padding: 16px; border-radius: 14px; font-size: 15px; font-weight: bold; cursor: pointer; transition: background 0.2s; }
+    .submit-btn:hover { background: #0069d9; }
+    .submit-btn:disabled { background: #ccc; cursor: not-allowed; }
+    .error-msg { color: #ff4d4f; font-size: 13px; text-align: center; margin-top: 12px; min-height: 20px; }
+    .result { display: none; text-align: center; padding: 20px 0; line-height: 1.8; }
+    .result-icon { font-size: 52px; margin-bottom: 16px; }
+    .result-title { font-size: 18px; font-weight: bold; color: #1a1a1a; margin-bottom: 8px; }
+    .result-sub { font-size: 14px; color: #888; }
+  </style>
+</head>
+<body>
+<div class="card">
+  <div id="loading" style="text-align:center; padding:60px 0; color:#aaa; font-size:14px;">인증 확인 중...</div>
+
+  <div id="form-area" style="display:none;">
+    <div class="logo">🤔 이 강의 어때?</div>
+    <h2>🎙 제작자 공식 답변 등록</h2>
+    <p class="sub">본인 인증이 완료된 제작자만 이 페이지에 접근할 수 있습니다.<br>작성하신 내용은 해당 강의 페이지에 공식 답변으로 표시됩니다.</p>
+    <div class="course-box">
+      <div class="course-label">답변 대상 강의</div>
+      <div id="course-title-box">강의명 불러오는 중...</div>
+    </div>
+    <div class="guide">
+      <div class="guide-title">작성 가이드</div>
+      ✅ 수강생의 경험을 존중하는 톤으로 작성해주세요<br>
+      ✅ 개선 내용이나 지원 사항을 구체적으로 알려주시면 좋습니다<br>
+      ❌ 수강생을 특정하거나 비방하는 내용은 비공개 처리됩니다
+    </div>
+    <textarea id="reply-text" maxlength="1000" placeholder="예) 수강해주신 분들께 먼저 감사드립니다. 말씀해주신 부분에 대해 설명드리겠습니다..." oninput="updateCount()"></textarea>
+    <div class="char-count"><span id="char-count">0</span> / 1000</div>
+    <div class="legal-box">본 답변은 제작자가 직접 등록한 공식 입장입니다.<br>운영자는 내용의 사실 여부를 보증하지 않습니다.</div>
+    <button class="submit-btn" id="submit-btn" onclick="submitReply()">공식 답변 등록하기</button>
+    <p class="error-msg" id="error-msg"></p>
+  </div>
+
+  <div class="result" id="result-area">
+    <div class="result-icon">✅</div>
+    <div class="result-title">공식 답변이 등록되었습니다</div>
+    <div class="result-sub">강의 페이지에 제작자 공식 답변으로 표시됩니다.</div>
+  </div>
+
+  <div class="result" id="error-area">
+    <div class="result-icon">❌</div>
+    <div class="result-title" id="error-area-msg">유효하지 않은 링크입니다</div>
+    <div class="result-sub">링크가 만료되었거나 이미 사용된 링크입니다.<br>운영팀으로 문의해 주세요.</div>
+  </div>
+</div>
+
+<script>
+  const SUPABASE_URL = 'https://tctogguvgwvkxpymdsmn.supabase.co';
+  const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRjdG9nZ3V2Z3d2a3hweW1kc21uIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgwNzA0MzQsImV4cCI6MjA4MzY0NjQzNH0.sd54qY83b09GmsIKVWCB7IkjLrC1vePrhbhPHKnQazE';
+  const headers = { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY, 'Content-Type': 'application/json' };
+  const token = new URLSearchParams(window.location.search).get('token');
+
+  window.addEventListener('DOMContentLoaded', async () => {
+    if (!token) return showError('토큰이 없습니다.');
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/verify_creator_token`, { method: 'POST', headers, body: JSON.stringify({ input_token: token }) });
+    const data = await res.json();
+    if (!data || data.error || !data.course_id) return showError('유효하지 않은 링크입니다.');
+    const courseRes = await fetch(`${SUPABASE_URL}/rest/v1/courses?id=eq.${data.course_id}&select=title`, { headers });
+    const courses = await courseRes.json();
+    document.getElementById('course-title-box').textContent = courses[0]?.title || '강의명을 불러올 수 없습니다.';
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('form-area').style.display = 'block';
+  });
+
+  function updateCount() {
+    document.getElementById('char-count').textContent = document.getElementById('reply-text').value.length;
+  }
+
+  async function submitReply() {
+    const content = document.getElementById('reply-text').value.trim();
+    const errEl = document.getElementById('error-msg');
+    if (content.length < 10) { errEl.textContent = '답변은 10자 이상 입력해주세요.'; return; }
+    const btn = document.getElementById('submit-btn');
+    btn.disabled = true;
+    btn.textContent = '등록 중...';
+    errEl.textContent = '';
+    const res = await fetch(`${SUPABASE_URL}/rest/v1/rpc/submit_creator_response`, { method: 'POST', headers, body: JSON.stringify({ input_token: token, input_content: content }) });
+    const result = await res.json();
+    if (result?.success) {
+      document.getElementById('form-area').style.display = 'none';
+      document.getElementById('result-area').style.display = 'block';
+    } else {
+      errEl.textContent = result?.message || '오류가 발생했습니다. 다시 시도해주세요.';
+      btn.disabled = false;
+      btn.textContent = '공식 답변 등록하기';
+    }
+  }
+
+  function showError(msg) {
+    document.getElementById('loading').style.display = 'none';
+    document.getElementById('error-area-msg').textContent = msg;
+    document.getElementById('error-area').style.display = 'block';
+  }
+</script>
+</body>
+</html>
