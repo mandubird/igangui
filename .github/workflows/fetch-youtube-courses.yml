@@ -1,0 +1,29 @@
+# 매일 오전 9시(KST)에 YouTube 채널 → courses 자동 수집
+name: Daily YouTube Courses
+
+on:
+  schedule:
+    - cron: "0 0 * * *"   # UTC 0시 = KST 9시
+  workflow_dispatch:       # 수동 실행 버튼
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 코드 체크아웃
+        uses: actions/checkout@v4
+
+      - name: Python 설정
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: 의존성 설치
+        run: pip install -r automation/requirements.txt
+
+      - name: 강의 수집 스크립트 실행
+        run: python automation/fetch_youtube_courses.py
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          YOUTUBE_API_KEY: ${{ secrets.YOUTUBE_API_KEY }}
